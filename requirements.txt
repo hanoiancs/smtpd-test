@@ -1,0 +1,5 @@
+aiosmtpd
+python-dotenv
+pymongo
+Flask
+eml_parser

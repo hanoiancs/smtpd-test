@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/static/axios.min.js"></script>
+    <script src="/static/vue.js"></script>
+    <script src="/static/app.js"></script>
+</head>
+<body>
+<div id="app">
+    <div v-if="mails.length" style="float:left; width: 100px; margin-right: 30px;">
+        <div v-for="(mail, idx) in mails" :key="mail.id">
+            <div>
+                <a v-on:click="show(idx)" href="javascript:void(0)">{{ '{{ mail.subject }}' }}</a>
+            </div>
+        </div>
+    </div>
+    <div v-if="current_mail">
+        <div>ID: {{ '{{ current_mail.id }}' }}</div>
+        <div>From: {{ '{{ current_mail.from }}' }}</div>
+        <div>To: {{ '{{ current_mail.to }}' }}</div>
+        <div>Subject: {{ '{{ current_mail.subject }}' }}</div>
+        <div>Created At: {{ '{{ current_mail.created_at }}' }}</div>
+        <div v-html="convertToHTML(current_mail.message)"></div>
+    </div>
+    <div style="clear:both;"></div>
+</div>
+</body>
+</html>

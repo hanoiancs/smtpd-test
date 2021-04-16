@@ -1,6 +1,7 @@
 import datetime
 import os
 import logging
+import email.header
 import asyncio
 import pymongo
 
@@ -26,6 +27,12 @@ client = pymongo.MongoClient(
     authSource=os.getenv("DB_MONGO_AUTHENTICATION_DATABASE")
 )
 db = client[os.getenv("DB_MONGO_DATABASE")]
+
+
+def decode_mime_words(s):
+    return u''.join(
+        word.decode(encoding or 'utf8') if isinstance(word, bytes) else word
+        for word, encoding in email.header.decode_header(s))
 
 
 class ExampleHandler:
@@ -54,7 +61,7 @@ class ExampleHandler:
             "client_id": session.auth_data['id'],
             "from": envelope.mail_from,
             "to": envelope.rcpt_tos,
-            "subject": message.get("Subject"),
+            "subject": decode_mime_words(message.get("Subject")),
             "content": envelope.content.decode('utf', errors='replace'),
             "created_at": datetime.datetime.utcnow(),
         })
@@ -96,7 +103,7 @@ async def amain(loop):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     loop = asyncio.get_event_loop()
     loop.create_task(amain(loop))
     try:

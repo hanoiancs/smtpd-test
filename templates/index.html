@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ecomobi - Email Test Viewer</title>
     <script src="/static/axios.min.js"></script>
-    <script src="/static/vue.js"></script>
+    <script src="/static/vue.min.js"></script>
     <script src="/static/app.js"></script>
     <style>
         body {
@@ -25,6 +25,17 @@
             max-width: 30%; 
             font-size: 10pt;
         }
+        .list-emails .list-emails-items{
+            height: 90vh;
+            min-height: 90vh;
+            overflow-y: auto;
+        }
+        .list-emails .list-emails-buttons button{
+            width: 50%;
+            height: 50px;
+            float:left;
+            display: block;
+        }
         .list-emails .list-emails__item {
             border-bottom:#ccc 1px solid;
             padding: 10pt 3pt;
@@ -39,8 +50,13 @@
         .view-email {
             float: left;
             max-width: 50%;
+            height: 100vh;
+            overflow-y: auto;
         }
-
+        .list-emails-items-foot {
+            display:block;
+            height: 50px;
+        }
         @media only screen and (max-width: 1300px) {
             .view-email {
                 max-width: 70%;
@@ -51,9 +67,16 @@
 <body>
 <div id="app">
     <div v-if="mails.length" class="list-emails">
-        <div v-for="(mail, idx) in mails" :key="mail.id" class="list-emails__item" v-on:click="show(idx)">
-            <div class="title">{{ '{{ mail.subject }}' }}</div>
-            <div class="created_at">{{ '{{ mail.created_at }}' }}</div>
+        <div class="list-emails-items">
+            <div v-for="(mail, idx) in mails" :key="mail.id" class="list-emails__item" v-on:click="show(idx)">
+                <div class="title">{{ '{{ mail.subject }}' }}</div>
+                <div class="created_at">{{ '{{ mail.created_at }}' }}</div>
+            </div>
+            <div class="list-emails-items-foot"></div>
+        </div>
+        <div class="list-emails-buttons">
+            <button v-on:click="fetch_prev">Previous</button>
+            <button v-on:click="fetch_next">Next</button>
         </div>
     </div>
     <div v-if="current_mail" class="view-email">

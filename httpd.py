@@ -1,7 +1,7 @@
 import os
 import quopri
-import eml_parser
 import pymongo
+from dateutil import tz
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, url_for
 from email import message_from_string
@@ -16,29 +16,48 @@ client = pymongo.MongoClient(
     authSource=os.getenv("DB_MONGO_AUTHENTICATION_DATABASE")
 )
 db = client[os.getenv("DB_MONGO_DATABASE")]
-app = Flask(__name__)
-ep = eml_parser.EmlParser()
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+def create_app():
+    # create and configure the app
+    app = Flask(__name__)
+
+    # a simple page that says hello
+    @app.route('/hello')
+    def hello():
+        return 'Hello, World!'
+
+    @app.route('/')
+    def index():
+        return render_template('index.html')
+
+    @app.route('/mails')
+    def get_mails():
+        data = []
+        mails = db.mails.find().limit(20).sort("_id", pymongo.DESCENDING)
+        for mail in mails:
+            # Decode content: Convert from quoted-printable to html
+            content = quopri.decodestring(message_from_string(mail["content"]).get_payload()).decode()
+            # Decode Subject
+            subject = mail["subject"]
+            # Convert created_at to local datetime
+            created_at = mail["created_at"]
+            created_at = created_at.replace(tzinfo=tz.tzutc())
+            created_at = created_at.astimezone(tz.tzlocal()).strftime("%d-%m-%Y, %H:%M:%S")
+
+            data.append({
+                "id": str(mail["_id"]),
+                "client_id": mail["client_id"],
+                "from": mail["from"],
+                "to": mail["to"],
+                "subject": subject,
+                "message": content,
+                # "message": message_from_string(mail["content"]).get_payload(),
+                "created_at": created_at
+            })
+
+        return jsonify(data)
+
+    return app
 
 
-@app.route('/mails')
-def get_mails():
-    mails = []
-    for mail in db.mails.find().sort("_id", pymongo.DESCENDING):
-        content = quopri.decodestring(message_from_string(mail["content"]).get_payload()).decode()
-        mails.append({
-            "id": str(mail["_id"]),
-            "client_id": mail["client_id"],
-            "from": mail["from"],
-            "to": mail["to"],
-            "subject": mail["subject"],
-            "message": content,
-            # "message": message_from_string(mail["content"]).get_payload(),
-            "created_at": mail["created_at"]
-        })
-
-    return jsonify(mails)

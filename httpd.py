@@ -43,6 +43,10 @@ def create_app():
         offset = (page - 1) * page_size
         total_docs = db.mails.count_documents({})
         total_pages = math.ceil(total_docs / page_size)
+        if page < 1:
+            page = 1
+        elif page > total_pages:
+            page = total_pages
         
         # Query database to get list of mails
         mails = db.mails.find().skip(offset).limit(page_size).sort("_id", pymongo.DESCENDING)

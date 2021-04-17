@@ -32,7 +32,7 @@
         }
         .list-emails .list-emails-buttons button{
             width: 50%;
-            height: 50px;
+            height: 30px;
             float:left;
             display: block;
         }
@@ -74,7 +74,10 @@
             </div>
             <div class="list-emails-items-foot"></div>
         </div>
-        <div class="list-emails-buttons">
+        <div class="list-emails-buttons" v-if="Object.keys(paging).length">
+            <div>
+                {{ '{{ paging.current }} / {{ paging.total }} | {{ paging.from_doc }} -> {{ paging.to_doc }}' }}
+            </div>
             <button v-on:click="fetch_prev">Previous</button>
             <button v-on:click="fetch_next">Next</button>
         </div>

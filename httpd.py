@@ -1,9 +1,10 @@
 import os
 import quopri
 import pymongo
+import math
 from dateutil import tz
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, url_for
+from flask import Flask, jsonify, render_template, url_for, request
 from email import message_from_string
 
 load_dotenv()
@@ -33,8 +34,21 @@ def create_app():
 
     @app.route('/mails')
     def get_mails():
+        # Paging
+        try:
+            page = int(request.args.get('page', 1))
+        except ValueError as verr:
+            page = 1
+        page_size = 10
+        offset = (page - 1) * page_size
+        total_docs = db.mails.count_documents({})
+        total_pages = math.ceil(total_docs / page_size)
+        
+        # Query database to get list of mails
+        mails = db.mails.find().skip(offset).limit(page_size).sort("_id", pymongo.DESCENDING)
+
+        # Prepare data to response
         data = []
-        mails = db.mails.find().limit(20).sort("_id", pymongo.DESCENDING)
         for mail in mails:
             # Decode content: Convert from quoted-printable to html
             content = quopri.decodestring(message_from_string(mail["content"]).get_payload()).decode()
@@ -56,7 +70,17 @@ def create_app():
                 "created_at": created_at
             })
 
-        return jsonify(data)
+        return jsonify({
+            "paging": {
+                "current": page,
+                "total": total_pages,
+                "page_size": page_size,
+                "count_docs": total_docs,
+                "from_doc": (offset + 1),
+                "to_doc": (offset + len(data))
+            },
+            "docs": data
+        })
 
     return app
 

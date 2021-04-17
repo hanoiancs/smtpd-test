@@ -39,7 +39,7 @@ def create_app():
             page = int(request.args.get('page', 1))
         except ValueError as verr:
             page = 1
-        page_size = 10
+        page_size = 25
         offset = (page - 1) * page_size
         total_docs = db.mails.count_documents({})
         total_pages = math.ceil(total_docs / page_size)

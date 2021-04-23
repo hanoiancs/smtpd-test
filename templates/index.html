@@ -11,11 +11,11 @@
             font-family: Arial, Verdana, Helvetica, Sans;
             color: #000;
         }
-        a {
+        .list-emails a {
             color: #000;
             text-decoration: none;
         }
-        a:hover {
+        .list-emails a:hover {
             color: blue;
             text-decoration: underline;
         }
@@ -88,7 +88,7 @@
     <div v-if="currentMail" class="view-email">
         <div>ID: {{ '{{ currentMail.id }}' }}</div>
         <div>From: {{ '{{ currentMail.from }}' }}</div>
-        <div>To: {{ '{{ currentMail.to }}' }}</div>
+        <div>To: {{ '{{ currentMail.to.join(\', \') }}' }}</div>
         <div>Subject: {{ '{{ currentMail.subject }}' }}</div>
         <div>Created At: {{ '{{ currentMail.created_at }}' }}</div>
         <div v-html="currentMail.message"></div>

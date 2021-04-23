@@ -1,11 +1,14 @@
+from email.policy import default
 import os
 import quopri
+from bson.errors import InvalidId
 import pymongo
 import math
 from dateutil import tz
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, url_for, request
 from email import message_from_string
+from bson.objectid import ObjectId
 
 load_dotenv()
 
@@ -19,6 +22,36 @@ client = pymongo.MongoClient(
 db = client[os.getenv("DB_MONGO_DATABASE")]
 
 
+def mail_to_json(mail):
+    """
+    Convert MongoDB mail document to JSON object.
+    """
+    # Decode content: Convert from quoted-printable to html
+    if "content" in mail:
+        content = quopri\
+                .decodestring(message_from_string(mail["content"]).get_payload())\
+                .decode()
+    else:
+        content = ""
+    # Decode Subject
+    subject = mail["subject"]
+    # Convert created_at to local datetime
+    created_at = mail["created_at"]
+    created_at = created_at\
+        .replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal())\
+        .strftime("%d-%m-%Y, %H:%M:%S")
+
+    return {
+        "id": str(mail["_id"]),
+        "client_id": mail["client_id"],
+        "from": mail["from"],
+        "to": mail["to"],
+        "subject": subject,
+        "message": content,
+        "created_at": created_at
+    }
+
+
 def create_app():
     # create and configure the app
     app = Flask(__name__)
@@ -28,9 +61,10 @@ def create_app():
     def hello():
         return 'Hello, World!'
 
-    @app.route('/')
-    def index():
-        return render_template('index.html')
+    @app.route('/', defaults={'id': ''})
+    @app.route('/view/<id>')
+    def index(id):
+        return render_template('index.html', id=id)
 
     @app.route('/mails')
     def get_mails():
@@ -49,30 +83,19 @@ def create_app():
             page = total_pages
         
         # Query database to get list of mails
-        mails = db.mails.find().skip(offset).limit(page_size).sort("_id", pymongo.DESCENDING)
+        mails = db.mails.find({}, {
+            "_id": 1,
+            "client_id": 1, 
+            "from": 1,
+            "to": 1,
+            "subject": 1,
+            "created_at": 1
+        }).skip(offset).limit(page_size).sort("_id", pymongo.DESCENDING)
 
         # Prepare data to response
         data = []
         for mail in mails:
-            # Decode content: Convert from quoted-printable to html
-            content = quopri.decodestring(message_from_string(mail["content"]).get_payload()).decode()
-            # Decode Subject
-            subject = mail["subject"]
-            # Convert created_at to local datetime
-            created_at = mail["created_at"]
-            created_at = created_at.replace(tzinfo=tz.tzutc())
-            created_at = created_at.astimezone(tz.tzlocal()).strftime("%d-%m-%Y, %H:%M:%S")
-
-            data.append({
-                "id": str(mail["_id"]),
-                "client_id": mail["client_id"],
-                "from": mail["from"],
-                "to": mail["to"],
-                "subject": subject,
-                "message": content,
-                # "message": message_from_string(mail["content"]).get_payload(),
-                "created_at": created_at
-            })
+            data.append(mail_to_json(mail))
 
         return jsonify({
             "paging": {
@@ -85,7 +108,21 @@ def create_app():
             },
             "docs": data
         })
+    
+    @app.route('/mail/<string:id>')
+    def get_mail(id):
+        try:
+            cursor = db.mails.find_one({"_id": ObjectId(id)});
+            return {
+                "success": True,
+                "mail": mail_to_json(cursor)
+            }
+        except InvalidId as err:
+            return {
+                "success": False,
+            }
 
+    # Return Application Object
     return app
 
 

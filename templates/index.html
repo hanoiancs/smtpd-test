@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ecomobi - Email Test Viewer</title>
     <script src="/static/axios.min.js"></script>
-    <script src="/static/vue.min.js"></script>
-    <script src="/static/app.js"></script>
+    <script src="/static/vue.js"></script>
     <style>
         body {
             font-family: Arial, Verdana, Helvetica, Sans;
@@ -46,7 +45,10 @@
             background: #efefef;
         }
         .list-emails .list-emails__item .title {margin-bottom: 2pt;}
+        .list-emails .list-emails__item .receivers,
         .list-emails .list-emails__item .created_at {font-size: 0.9em; color: #333;}
+        .list-emails .list-emails__item .receivers{margin-bottom: 2pt;}
+        
         .view-email {
             float: left;
             max-width: 50%;
@@ -68,8 +70,9 @@
 <div id="app">
     <div v-if="mails.length" class="list-emails">
         <div class="list-emails-items">
-            <div v-for="(mail, idx) in mails" :key="mail.id" class="list-emails__item" v-on:click="show(idx)">
-                <div class="title">{{ '{{ mail.subject }}' }}</div>
+            <div v-for="(mail, idx) in mails" :key="mail.id" class="list-emails__item" v-on:click="defaultId = mail.id">
+                <div class="title">{{ '{{ paging.from_doc + idx }} - {{ mail.subject }}' }}</div>
+                <div class="receivers">{{ '{{ mail.to.join(", ") }}' }}</div>
                 <div class="created_at">{{ '{{ mail.created_at }}' }}</div>
             </div>
             <div class="list-emails-items-foot"></div>
@@ -78,19 +81,89 @@
             <div>
                 {{ '{{ paging.current }} / {{ paging.total }} | {{ paging.from_doc }} -> {{ paging.to_doc }}' }}
             </div>
-            <button v-on:click="fetch_prev">Previous</button>
-            <button v-on:click="fetch_next">Next</button>
+            <button v-on:click="fetchPreviousPage">Previous</button>
+            <button v-on:click="fetchNextPage">Next</button>
         </div>
     </div>
-    <div v-if="current_mail" class="view-email">
-        <div>ID: {{ '{{ current_mail.id }}' }}</div>
-        <div>From: {{ '{{ current_mail.from }}' }}</div>
-        <div>To: {{ '{{ current_mail.to }}' }}</div>
-        <div>Subject: {{ '{{ current_mail.subject }}' }}</div>
-        <div>Created At: {{ '{{ current_mail.created_at }}' }}</div>
-        <div v-html="current_mail.message"></div>
+    <div v-if="currentMail" class="view-email">
+        <div>ID: {{ '{{ currentMail.id }}' }}</div>
+        <div>From: {{ '{{ currentMail.from }}' }}</div>
+        <div>To: {{ '{{ currentMail.to }}' }}</div>
+        <div>Subject: {{ '{{ currentMail.subject }}' }}</div>
+        <div>Created At: {{ '{{ currentMail.created_at }}' }}</div>
+        <div v-html="currentMail.message"></div>
     </div>
     <div style="clear:both;"></div>
 </div>
+
+<script>
+window.addEventListener("DOMContentLoaded", function(event) {
+    new Vue({
+        el: '#app',
+        data: {
+            defaultId: '{{ id }}',
+            mails: [],
+            currentMail: null,
+            paging: {
+                current: 1
+            }
+        },
+        watch: {
+            defaultId: function (newValue, oldValue) {
+                this.fetchMail();
+            }
+        },
+        mounted: function () {
+            this.fetch();
+            this.fetchMail();
+        },
+        methods: {
+            fetch: function () {
+                axios
+                    .get('/mails?page=' + this.paging.current)
+                    .then(response => {
+                        if (response.status === 200) {
+                            this.mails = response.data.docs;
+                            this.paging = response.data.paging;
+                        } else {
+                            this.mails = [];
+                            this.paging = {};
+                        }
+                    });
+            },
+            fetchNextPage: function () {
+                if (this.paging.total > 1 && this.paging.current < this.paging.total) {
+                    this.paging.current++;
+                    this.fetch();
+                }
+            },
+            fetchPreviousPage: function () {
+                if (this.paging.total > 1 && this.paging.current > 1) {
+                    this.paging.current--;
+                    this.fetch();
+                }
+            },
+            fetchMail: function () {
+                if (this.defaultId) {
+                    history.pushState(
+                        {urlPath: '/view/' + this.defaultId}, 
+                        "", 
+                        '/view/' + this.defaultId
+                    );
+                    axios
+                    .get("/mail/" + this.defaultId)
+                    .then(response => {
+                        if (response.status === 200 && response.data.success) {
+                            this.currentMail = response.data.mail;
+                        } else {
+                            this.defaultId = "";
+                        }
+                    });
+                }
+            }
+        }
+    });
+});
+</script>
 </body>
 </html>

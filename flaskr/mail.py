@@ -4,13 +4,8 @@ from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import (
     Blueprint,
-    Flask,
-    g, 
-    redirect,
     render_template,
     request,
-    session,
-    url_for,
     jsonify
 )
 from . import db
@@ -87,3 +82,7 @@ def get_mail(id):
         return {
             "success": False,
         }
+
+@bp.cli.command('clear')
+def command_clear_mails():
+    db.get_database().mails.delete_many({})

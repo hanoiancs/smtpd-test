@@ -13,7 +13,8 @@ def create_app():
     from . import db
     db.init_app(app)
     # Register Blueprints
-    from . import mail
+    from . import auth, mail
+    app.register_blueprint(auth.bp)
     app.register_blueprint(mail.bp)
     app.add_url_rule('/', endpoint='index', defaults={'id': ''})
     # Return application object

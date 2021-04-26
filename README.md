@@ -92,7 +92,7 @@ flask run
 Command dưới đây sẽ tạo 1 cặp username/password để kết nối tới smtp server với username là `hello` và password ngẫu nhiên (được in ra sau khi script chạy xong):
 
 ```bash 
-python ./scripts/create-client.py --user hello 
+flask auth create hello 
 ```
 
 Giả sử output là:

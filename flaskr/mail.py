@@ -83,6 +83,8 @@ def get_mail(id):
             "success": False,
         }
 
+
 @bp.cli.command('clear')
 def command_clear_mails():
+    """ Delete all existing emails in database. """
     db.get_database().mails.delete_many({})

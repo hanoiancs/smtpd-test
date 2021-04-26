@@ -26,6 +26,9 @@ def get_db():
 
 __author__ = 'quanta@ecomobi.com'
 
+def create_client(username: str, password: str):
+    pass
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create SMTP auth username and password.')
     parser.add_argument('-u', '--user', help='Input username', required=True)

@@ -3,3 +3,6 @@
 example.py
 example.eml
 __pycache__
+*.conf
+venv
+docker-compose.yml

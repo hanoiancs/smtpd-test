@@ -15,7 +15,7 @@ def create_app():
     # Register Blueprints
     from . import mail
     app.register_blueprint(mail.bp)
-    app.add_url_rule('/', endpoint='index')
+    app.add_url_rule('/', endpoint='index', defaults={'id': None})
     # Return application object
     return app
 

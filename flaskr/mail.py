@@ -20,7 +20,7 @@ from .util import mail_to_json
 bp = Blueprint('mail', __name__)
 
 
-@bp.route('/', defaults={'id': None})
+@bp.route('/', defaults={'id': ''})
 @bp.route('/view/<id>')
 def index(id):
     return render_template('index.html', id=id)

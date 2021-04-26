@@ -73,11 +73,16 @@ def get_mails():
 @bp.route('/api/mails/<string:id>')
 def get_mail(id):
     try:
-        cursor = db.get_database().mails.find_one({"_id": ObjectId(id)});
-        return {
-            "success": True,
-            "mail": mail_to_json(cursor)
-        }
+        cursor = db.get_database().mails.find_one({"_id": ObjectId(id)})
+        if cursor:
+            return {
+                "success": True,
+                "mail": mail_to_json(cursor)
+            }
+        else:
+            return {
+                "success": False
+            }
     except InvalidId as err:
         return {
             "success": False,

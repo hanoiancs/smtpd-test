@@ -2,3 +2,4 @@ aiosmtpd
 python-dotenv
 pymongo
 Flask
+python-dateutil

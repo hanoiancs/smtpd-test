@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ecomobi - Email Test Viewer</title>
     <script src="/static/axios.min.js"></script>
-    <script src="/static/vue.js"></script>
+    <script src="/static/vue.min.js"></script>
     <style>
         body {
             font-family: Arial, Verdana, Helvetica, Sans;
@@ -120,7 +120,7 @@ window.addEventListener("DOMContentLoaded", function(event) {
         methods: {
             fetch: function () {
                 axios
-                    .get('/mails?page=' + this.paging.current)
+                    .get('/api/mails?page=' + this.paging.current)
                     .then(response => {
                         if (response.status === 200) {
                             this.mails = response.data.docs;
@@ -151,7 +151,7 @@ window.addEventListener("DOMContentLoaded", function(event) {
                         '/view/' + this.defaultId
                     );
                     axios
-                    .get("/mail/" + this.defaultId)
+                    .get("/api/mails/" + this.defaultId)
                     .then(response => {
                         if (response.status === 200 && response.data.success) {
                             this.currentMail = response.data.mail;

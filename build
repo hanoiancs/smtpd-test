@@ -1,0 +1,6 @@
+#! /usr/bin/bash
+
+docker build ./web -t smtpd-web:v0.0.1
+docker build ./smtpd -t smtpd-server:v0.0.1
+
+docker compose up -d
